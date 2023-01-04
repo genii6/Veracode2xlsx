@@ -7,7 +7,8 @@ import os
 def create_excel(Flaws):
 
    # Creating book and 2 sheets
-    book = Workbook(data_only=False, guess_types=False)
+    # book = Workbook(data_only=False, guess_types=False)
+    book = Workbook()
 	
     stats_sheet = book.active
     stats_sheet.title = "Stats"
@@ -74,13 +75,14 @@ def create_excel(Flaws):
     # Preparing Flaws sheet
     
     flaws_sheet.cell(row = 1, column = 1).value = "Flaw id"
-    flaws_sheet.cell(row = 1, column = 2).value = "Category"
-    flaws_sheet.cell(row = 1, column = 3).value = "Sub Category"
-    flaws_sheet.cell(row = 1, column = 4).value = "Library"
-    flaws_sheet.cell(row = 1, column = 5).value = "File Path"
-    flaws_sheet.cell(row = 1, column = 6).value = "Line"
-    flaws_sheet.cell(row = 1, column = 7).value = "Severity"
-    flaws_sheet.cell(row = 1, column = 8).value = "Propietary"
+    flaws_sheet.cell(row = 1, column = 2).value = "CWE ID"
+    flaws_sheet.cell(row = 1, column = 3).value = "Category"
+    flaws_sheet.cell(row = 1, column = 4).value = "Sub Category"
+    flaws_sheet.cell(row = 1, column = 5).value = "Library"
+    flaws_sheet.cell(row = 1, column = 6).value = "File Path"
+    flaws_sheet.cell(row = 1, column = 7).value = "Line"
+    flaws_sheet.cell(row = 1, column = 8).value = "Severity"
+    flaws_sheet.cell(row = 1, column = 9).value = "Propietary"
     
 
     # Preparing Libraries sheet
@@ -102,12 +104,14 @@ def create_excel(Flaws):
         
         # Flaw id
         flaws_sheet.cell(row = counter, column = 1).value = int(flaw.get("issueid"))
+        # CWE ID
+        flaws_sheet.cell(row = counter, column = 2).value = int(flaw.get("cweid"))
         # Category
-        flaws_sheet.cell(row = counter, column = 2).value = category
+        flaws_sheet.cell(row = counter, column = 3).value = category
         # Sub Category
-        flaws_sheet.cell(row = counter, column = 3).value = flaw.get("categoryname")
+        flaws_sheet.cell(row = counter, column = 4).value = flaw.get("categoryname")
         # Library
-        flaws_sheet.cell(row = counter, column = 4).value = flaw.get("module")
+        flaws_sheet.cell(row = counter, column = 5).value = flaw.get("module")
         # File path
         pathfile = flaw.get("sourcefilepath") + flaw.get("sourcefile")
         
@@ -115,17 +119,17 @@ def create_excel(Flaws):
             compiled = True
         if compiled:
             pathfile = "Compiled library (check report): " + flaw.get("module")
-        flaws_sheet.cell(row = counter, column = 5).value = pathfile
+        flaws_sheet.cell(row = counter, column = 6).value = pathfile
         vulnerable_libraries.add(flaw.get("module"))
         # Line
         if not compiled:
-            flaws_sheet.cell(row = counter, column = 6).value = int(flaw.get("line"))
+            flaws_sheet.cell(row = counter, column = 7).value = int(flaw.get("line"))
         else:
-            flaws_sheet.cell(row = counter, column = 6).value = "Vulnerable class: " + flaw.get("functionprototype") + " at " + flaw.get("functionrelativelocation") + "%"
+            flaws_sheet.cell(row = counter, column = 7).value = "Vulnerable class: " + flaw.get("functionprototype") + " at " + flaw.get("functionrelativelocation") + "%"
         # Severity
-        flaws_sheet.cell(row = counter, column = 7).value = int(flaw.get("severity"))
+        flaws_sheet.cell(row = counter, column = 8).value = int(flaw.get("severity"))
         # Propietary
-        flaws_sheet.cell(row = counter, column = 8).value = "=VLOOKUP(D" + str(counter) + ",Libraries!A:B,2,FALSE)"
+        flaws_sheet.cell(row = counter, column = 9).value = "=VLOOKUP(D" + str(counter) + ",Libraries!A:B,2,FALSE)"
     
     
     counter = 1
@@ -158,7 +162,7 @@ inxml = args.infile
 outxls = args.outfile
 
 if not(os.path.isfile(inxml)):
-    print inxml + "doesn't exist."
+    print(inxml + "doesn't exist.")
     exit()
 
 # Preparing to parse XML
@@ -167,25 +171,25 @@ root = tree.getroot()
 
 Flaws = []
 
-print ""
-print "Parsing..."
+print("")
+print("Parsing...")
 # Go through the XML and create a list of lists of flaws to be able to associate a flaw to a category. Please note the namespace when finding nodes
 for severity in root.findall("{https://www.veracode.com/schema/reports/export/1.0}severity"):
     for category in severity:
         for flaw in category.iter("{https://www.veracode.com/schema/reports/export/1.0}flaw"):
             Flaws.append([flaw, category.get("categoryname")])
 
-print "Parsing done correctly."
+print("Parsing done correctly.")
 
-print "Creating excel file..."
-print ""
+print("Creating excel file...")
+print("")
 
 book = create_excel(Flaws)
 
 book.save(outxls)
 
-print "Excel file: " + outxls + " built correctly!"
-print ""
-print "Now fill in the propietary column for each of the libraries!"
-print ""
+print("Excel file: " + outxls + " built correctly!")
+print("")
+print("Now fill in the propietary column for each of the libraries!")
+print("")
 
